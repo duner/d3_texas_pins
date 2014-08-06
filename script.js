@@ -1,40 +1,92 @@
-d3.json('texas.topo.json', function(data) {
+$(document).ready(function(){
+	var w = $('#map').width();
+	var h = $('#map').height();
 
-	var w = 500;
-	var h = 500;
+	d3.json('texas.topo.json', function(data) {
 
-	var texas = topojson.feature(data, data.objects.texas);
-    
-    var center = d3.geo.centroid(texas);
-    var bounds = d3.geo.bounds(texas);
+		var margin = {top: 10, left: 10, bottom: 10, right: 10};
+		var mapRatio = 1;
+	    var width = w - margin.left - margin.right;
+	    var height = width * mapRatio;
 
-	var projection = d3.geo.albers()
-		// .center(center)
-	    // .scale(1000)
-	    .translate([w / 2, h / 2]);
+		var texas = topojson.feature(data, data.objects.texas);
+	  	var point = {
+	  		coords: [-97.7500, 30.2500],
+	  		name: 'Austin'
+	  	};
 
-	var path = d3.geo.path()
-	    .projection(projection);
+		var svg = d3.select("#map").append("svg")
+			.attr("width", width)
+			.attr("height", height);
 
-	var svg = d3.select("body").append("svg")
-		.attr("width", w)
-		.attr("height", h);
+		var projection = d3.geo.mercator()
+			.center(d3.geo.centroid(texas))
+		    .scale(width)
+		    .translate([width / 2, height / 2]);
 
-	var point = [-97.7500, 30.2500]; //Austin
+		var path = d3.geo.path()
+		    .projection(projection);
 
-	svg.append("path")
-		.datum(texas)
-		.attr("d", path)
-		.style('fill', 'black')
-		.style('stroke', 'black');
+		function createMap() {
 
-    svg.selectAll("circle")
-		.data([point])
-		.enter()
-		.append("circle")
-		.attr("cx", function (d) { return projection(d)[0]; })
-		.attr("cy", function (d) { return projection(d)[1]; })
-		.attr("r", "8px")
-		.attr("fill", "red");
+			svg.append("path")
+				.datum(texas)
+				.attr("d", path)
+				.style('fill', 'black')
+				.style('stroke', 'black');
+
+		    svg.selectAll("circle")
+				.data([point])
+				.enter()
+				.append("circle")
+					.attr("cx", function (d) { return projection(d.coords)[0]; })
+					.attr("cy", function (d) { return projection(d.coords)[1]; })
+					.attr("r", function(d) { return (width / mapRatio) * .01 + 'px'; })
+					.attr("fill", "red");
+
+			svg.append('text')
+				.data([point])
+				.enter()
+				.append("text")
+					.attr('x', function(d){ return console.log(d); path.centroid(d.coords)[0];})
+					.attr('y', function(d){ return path.centroid(d.coords)[1];})
+					.attr('text',function(d){return d.name;})
+					.style("font-size","14px");
+
+		}
+
+		$(window).resize(function() {
+
+			var w = $('#map').width();
+			var h = $('#map').height();
+		    var width = w - margin.left - margin.right;
+	    	var height = width * mapRatio;
+
+		  	var projection = d3.geo.mercator()
+				.center(d3.geo.centroid(texas))
+			    .scale(width)
+			    .translate([width / 2, height / 2]);
+		
+			var path = d3.geo.path()
+		    	.projection(projection);    
+  		
+  			svg
+				.attr("width", width)
+				.attr("height", height);
+
+		    svg.selectAll('path').attr('d', path);
+		    svg.selectAll('circle')
+		    	.attr("cx", function (d) { return projection(d.coords)[0]; })
+				.attr("cy", function (d) { return projection(d.coords)[1]; })
+				.attr("r", function(d) { return (width / mapRatio) * .01 + 'px'; });
+
+
+		});
+
+
+		createMap();
+	});
 
 });
+
+
