@@ -3,9 +3,15 @@ d3.json('texas.topo.json', function(data) {
 	var w = 500;
 	var h = 500;
 
-	var projection = d3.geo.albersUsa()
-	    .scale(1000)
-	    .translate([w / 2, h / 2]); 
+	var texas = topojson.feature(data, data.objects.texas);
+    
+    var center = d3.geo.centroid(texas);
+    var bounds = d3.geo.bounds(texas);
+
+	var projection = d3.geo.albers()
+		// .center(center)
+	    // .scale(1000)
+	    .translate([w / 2, h / 2]);
 
 	var path = d3.geo.path()
 	    .projection(projection);
@@ -14,13 +20,21 @@ d3.json('texas.topo.json', function(data) {
 		.attr("width", w)
 		.attr("height", h);
 
-	feature = topojson.feature(data, data.objects.texas);
-	console.log(feature);
+	var point = [-97.7500, 30.2500]; //Austin
 
 	svg.append("path")
-		.datum(feature)
+		.datum(texas)
 		.attr("d", path)
 		.style('fill', 'black')
 		.style('stroke', 'black');
+
+    svg.selectAll("circle")
+		.data([point])
+		.enter()
+		.append("circle")
+		.attr("cx", function (d) { return projection(d)[0]; })
+		.attr("cy", function (d) { return projection(d)[1]; })
+		.attr("r", "8px")
+		.attr("fill", "red");
 
 });
